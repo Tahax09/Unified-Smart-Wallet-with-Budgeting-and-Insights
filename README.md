@@ -30,4 +30,3 @@ o	Produce, AI spending generation precursor patterns and analyses, utilized best
 4.	Security Features:
 o	Strengthen strong data protection for the users by use of encryption, prompt tokenization and multifactor authentication (MFA).
 
-![image](https://github.com/user-attachments/assets/c0b2d5f9-6fb4-45bd-b687-b848ee7ad109)
