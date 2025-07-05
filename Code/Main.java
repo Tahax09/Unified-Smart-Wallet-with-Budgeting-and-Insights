@@ -1,190 +1,217 @@
-import java.util.Date;
-import java.util.UUID;
+import java.util.*;
 
-// Domain Classes
-class User {
-    private String userId;
-    private String name;
-    private String email;
-    private String phone;
-
-    public User(String userId, String name, String email, String phone) {
-        this.userId = userId;
-        this.name = name;
-        this.email = email;
-        this.phone = phone;
-    }
-}
-
+// Domain Class: Wallet
 class Wallet {
-    private String walletId;
+    private String userId;
     private double balance;
-    private String currency;
-    
 
-    public Wallet(String walletId, double balance, String currency) {
-        this.walletId = walletId;
+    public Wallet(String userId, double balance) {
+        this.userId = userId;
         this.balance = balance;
-        this.currency = currency;
     }
 
-    public boolean debit(double amount) {
-        if (amount > 0 && balance >= amount) {
-            balance -= amount;
-            return true;
-        }
-        return false;
-    }
-
-    public boolean credit(double amount) {
-        if (amount > 0) {
-            balance += amount;
-            return true;
-        }
-        return false;
+    public String getUserId() {
+        return userId;
     }
 
     public double getBalance() {
         return balance;
     }
+
+    public void setBalance(double balance) {
+        this.balance = balance;
+    }
 }
 
-class Transaction {
-    private String transactionId;
-    private Wallet sender;
-    private Wallet recipient;
-    private double amount;
-    private String status;
-    private Date timestamp;
+// AuthenticationService
+class AuthenticationService {
+    private Map<String, String> userPins = new HashMap<>();
 
-    public Transaction(String transactionId, Wallet sender, Wallet recipient, double amount) {
-        this.transactionId = transactionId;
-        this.sender = sender;
-        this.recipient = recipient;
-        this.amount = amount;
-        this.status = "PENDING";
-        this.timestamp = new Date();
+    public void registerUser(String userId, String pin) {
+        userPins.put(userId, pin);
     }
 
-    public boolean process() {
-        if (sender.debit(amount)) {
-            if (recipient.credit(amount)) {
-                status = "COMPLETED";
-                return true;
-            }
+    public boolean authenticate(String userId, String pin) {
+        return pin != null && pin.equals(userPins.get(userId));
+    }
+}
+
+// WalletService
+class WalletService {
+    private Map<String, Wallet> wallets = new HashMap<>();
+
+    public void addWallet(Wallet wallet) {
+        wallets.put(wallet.getUserId(), wallet);
+    }
+
+    public String checkBalance(String userId, double amount) {
+        Wallet wallet = wallets.get(userId);
+        if (wallet != null && wallet.getBalance() >= amount) {
+            return "Sufficient";
         }
-        status = "FAILED";
+        return "Insufficient";
+    }
+
+    public double getBalance(String userId) {
+    Wallet wallet = wallets.get(userId);
+    if (wallet != null) {
+        return wallet.getBalance();
+    }
+    return 0.0;
+    }
+
+    public boolean debit(String userId, double amount) {
+        Wallet wallet = wallets.get(userId);
+        if (wallet != null && wallet.getBalance() >= amount) {
+            wallet.setBalance(wallet.getBalance() - amount);
+            return true;
+        }
         return false;
     }
+
+    public boolean credit(String userId, double amount) {
+        Wallet wallet = wallets.get(userId);
+        if (wallet != null) {
+            wallet.setBalance(wallet.getBalance() + amount);
+            return true;
+        }
+        return false;
+    }
+
+    // Check if recipient exists $need professor's approval first
+    //public boolean recipientExists(String recipientId) {
+    //return wallets.containsKey(recipientId);
+    //}
 }
 
-class Authentication {
-    private String method;
-    private Date timestamp;
-
-    public boolean verify() {
-        // Authentication logic
-        return true;
-    }
-}
-
-class Notification {
-    private String notificationId;
-    private String message;
-    private Date timestamp;
-
-    public void send() {
-        // Notification sending logic
-    }
-}
-
-// Service Classes
-class AuthenticationService {
-    public boolean authenticate(String credentials) {
-        // Authentication logic
-        return true;
-    }
-}
-
-class WalletService {
-    public boolean checkBalance(Wallet wallet, double amount) {
-        return wallet.getBalance() >= amount;
-    }
-
-    public boolean debit(Wallet wallet, double amount) {
-        return wallet.debit(amount);
-    }
-
-    public boolean credit(Wallet wallet, double amount) {
-        return wallet.credit(amount);
-    }
-}
-
+// TransactionService
 class TransactionService {
-    public Transaction createTransaction(Wallet sender, Wallet recipient, double amount) {
-        return new Transaction(UUID.randomUUID().toString(), sender, recipient, amount);
+    private List<String> transactions = new ArrayList<>();
+
+    public String createTransaction(String senderId, String recipientId, double amount) {
+        String record = "From: " + senderId + ", To: " + recipientId + ", Amount: " + amount;
+        transactions.add(record);
+        return "Transaction successful";
     }
 }
 
+// NotificationService
 class NotificationService {
-    public void sendNotification(User user, String message) {
-        Notification notification = new Notification();
-        notification.send();
+    public boolean sendNotification(String userId, String message) {
+        System.out.println("Notification to " + userId + ": " + message);
+        return true;
     }
 }
 
-// Controller Class
+// Controller
 class SendMoneyController {
-    private AuthenticationService authService = new AuthenticationService();
-    private WalletService walletService = new WalletService();
-    private TransactionService transactionService = new TransactionService();
-    private NotificationService notificationService = new NotificationService();
+    private AuthenticationService authService;
+    private WalletService walletService;
+    private TransactionService transactionService;
+    private NotificationService notificationService;
 
-    public void sendMoney(String senderId, String recipientId, double amount, String credentials) {
-        // 1. Authenticate
-        if (!authService.authenticate(credentials)) {
-            return;
-        }
-
-        // 2. Retrieve wallets (simplified)
-        Wallet senderWallet = getWallet(senderId);
-        Wallet recipientWallet = getWallet(recipientId);
-
-        // 3. Check balance
-        if (!walletService.checkBalance(senderWallet, amount)) {
-            return;
-        }
-
-        // 4. Process transaction
-        Transaction transaction = transactionService.createTransaction(senderWallet, recipientWallet, amount);
-        if (!transaction.process()) {
-            return;
-        }
-
-        // 5. Send notifications
-        notificationService.sendNotification(getUser(senderId), "Money sent");
-        notificationService.sendNotification(getUser(recipientId), "Money received");
+    public SendMoneyController(AuthenticationService authService, WalletService walletService,
+                               TransactionService transactionService, NotificationService notificationService) {
+        this.authService = authService;
+        this.walletService = walletService;
+        this.transactionService = transactionService;
+        this.notificationService = notificationService;
     }
 
-    // Helper methods (simplified)
-    private Wallet getWallet(String userId) {
-        // Actual implementation would fetch from database
-        return new Wallet("wallet_" + userId, 1000.0, "USD");
-    }
+    public String sendMoney(String userId, String pin, String recipientId, double amount) {
+        boolean authResult = authService.authenticate(userId, pin);
+        if (!authResult) {
+            return "Authentication failed";
+        }
 
-    private User getUser(String userId) {
-        // Actual implementation would fetch from database
-        return new User(userId, "User " + userId, "user@example.com", "123456789");
+        String balanceStatus = walletService.checkBalance(userId, amount);
+        if (!"Sufficient".equals(balanceStatus)) {
+            return "Insufficient funds";
+        }
+
+        boolean debitResult = walletService.debit(userId, amount);
+        boolean creditResult = walletService.credit(recipientId, amount);
+
+        if (!debitResult || !creditResult) {
+            return "Transaction failed";
+        }
+
+        String transactionResult = transactionService.createTransaction(userId, recipientId, amount);
+
+        notificationService.sendNotification(userId, "You sent $" + amount + " to " + recipientId);
+        notificationService.sendNotification(recipientId, "You received $" + amount + " from " + userId);
+
+        return transactionResult;
     }
 }
 
-// Usage Example
+// Main class
 public class Main {
     public static void main(String[] args) {
-        SendMoneyController controller = new SendMoneyController();
-        controller.sendMoney("user1", "user2", 150.0, "valid_credentials");
+        Scanner scanner = new Scanner(System.in);
 
-         // Add print statements to see results!
-        System.out.println("Send money operation completed.");
+        // Set up services
+        AuthenticationService authService = new AuthenticationService();
+        WalletService walletService = new WalletService();
+        TransactionService transactionService = new TransactionService();
+        NotificationService notificationService = new NotificationService();
+
+        // Register user and recipient
+        authService.registerUser("tahax09", "1999");
+        walletService.addWallet(new Wallet("tahax09", 500.0));
+        walletService.addWallet(new Wallet("prof_alessia", 0.0));
+
+        // Set up controller
+        SendMoneyController controller = new SendMoneyController(
+            authService, walletService, transactionService, notificationService
+        );
+
+        System.out.println("=== Unified Smart Wallet: Send Money ===");
+        System.out.println("Welcome to the Unified Smart Wallet System!");
+        
+        String userId, pin;
+        boolean loginSuccess = false;
+
+        do {
+            System.out.print("Enter user name: ");
+            userId = scanner.nextLine();
+
+            System.out.print("Enter PIN code or password: ");
+            pin = scanner.nextLine();
+
+            loginSuccess = authService.authenticate(userId, pin);
+            if (loginSuccess) {
+                System.out.println("Login successful. Welcome, " + userId + "!");
+            } else {
+                System.out.println("Login failed. Please check your username and PIN and try again.\n");
+            }
+        } while (!loginSuccess);
+
+        // Display current balance
+        System.out.println("\n--- Send Money ---");
+        System.out.println("Your current balance: €" + walletService.getBalance(userId));
+        System.out.print("Enter recipient name: ");
+        String recipientId = scanner.nextLine();
+
+        // Check if recipient exists $need professor's approval first
+        /*String recipientId;
+        do {
+            System.out.print("Enter recipient name: ");
+            recipientId = scanner.nextLine();
+
+            if (!walletService.recipientExists(recipientId)) {
+            System.out.println("Recipient not found. Please enter a valid recipient.");
+            } else {
+            break;
+            }
+        } while (true);*/
+
+        System.out.print("Enter amount to send: ");
+        double amount = scanner.nextDouble();
+
+        System.out.println("\nProcessing transaction...");
+        String result = controller.sendMoney(userId, pin, recipientId, amount);
+
+        System.out.println("Transaction status: " + result);
     }
 }
