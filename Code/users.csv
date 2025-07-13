@@ -1,20 +1,23 @@
-userid,pin,balance
-frank,2468,600.0
-oscar,0246,500.0
-dave,8765,300.0
-prof_alessia,2468,855.0
-alice,1234,250.0
-ivan,5791,900.0
-jack,6802,100.0
-laura,8024,300.0
-mallory,9135,400.0
-bob,4321,150.0
-karen,7913,200.0
-trudy,2468,700.0
-eve,1357,400.0
-victor,3579,800.0
-grace,3579,700.0
-heidi,4680,800.0
-tahax09,1999,645.0
-peggy,1357,600.0
-charlie,5678,50.0
+userId,pin,name,email,accountId,balance
+ianc09,1122,Ian Clark,ian.clark@example.com,ACC009,300.0
+olivial15,4455,Olivia Lee,olivia.lee@example.com,ACC015,120.0
+quinnh17,8899,Quinn Hall,quinn.hall@example.com,ACC017,200.0
+prof_alessia,8888,Prof. Alessia Di Fonso,difonso@example.com,ACC022,4300.0
+hannahg08,8642,Hannah Green,hannah.green@example.com,ACC008,1750.3
+same19,2020,Sam Evans,sam.evans@example.com,ACC019,100.0
+juliaa10,3344,Julia Adams,julia.adams@example.com,ACC010,120.99
+bobj02,5678,Bob Jones,bob@example.com,ACC002,800.0
+evab05,1357,Eva Brown,eva.brown@example.com,ACC005,2100.0
+fionaw06,2469,Fiona White,fiona.white@example.com,ACC006,50.0
+charliel03,4321,Charlie Lee,charlie@example.com,ACC003,150.75
+lisam12,7788,Lisa Moore,lisa.moore@example.com,ACC012,640.5
+ninap14,2233,Nina Patel,nina.patel@example.com,ACC014,950.1
+michaels13,9900,Michael Scott,michael.scott@example.com,ACC013,1800.0
+pauly16,6677,Paul Young,paul.young@example.com,ACC016,780.75
+alices01,1234,Alice Smith,alice@example.com,ACC001,1200.5
+tinaw20,3030,Tina Wood,tina.wood@example.com,ACC020,210.25
+kevint11,5566,Kevin Turner,kevin.turner@example.com,ACC011,0.0
+rachelk18,1010,Rachel King,rachel.king@example.com,ACC018,1575.6
+tahax09,1999,Taha Alabyad,tahax09@example.com,ACC021,5200.0
+georgeb07,9753,George Black,george.black@example.com,ACC007,500.0
+davidk04,2468,David Kim,david.kim@example.com,ACC004,950.2

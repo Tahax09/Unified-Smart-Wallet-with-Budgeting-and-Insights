@@ -1,75 +1,92 @@
+import java.util.List;
 import java.util.Scanner;
 
-// Main class
 public class Main {
     public static void main(String[] args) {
-        // Initialize DataAccess with your CSV file
-        DataAccess dataAccess = new DataAccess("users.csv");
-
-        // Set up services using DataAccess
-        AuthenticationService authService = new AuthenticationService(dataAccess);
-        WalletService walletService = new WalletService(dataAccess);
-        TransactionService transactionService = new TransactionService();
-        NotificationService notificationService = new NotificationService();
-
-        // Register user and recipient
-        /*authService.registerUser("tahax09", "1999");
-        walletService.addWallet(new Wallet("tahax09", 500.0));
-        walletService.addWallet(new Wallet("prof_alessia", 0.0));*/
-
-        // Set up controller
-        SendMoneyController controller = new SendMoneyController(
-            authService, walletService, transactionService, notificationService
-        );
-
-        System.out.println("=== Unified Smart Wallet: Send Money ===");
-        System.out.println("Welcome to the Unified Smart Wallet System!");
-        
         Scanner scanner = new Scanner(System.in);
-        String userId, pin;
-        boolean loginSuccess = false;
+        DataManager dataManager = new DataManager("users.csv");
+        TransactionController controller = new TransactionController(dataManager);
+
+        System.out.println("Welcome to Unified Smart Wallet");
+
+        // Step 1: User login
+        System.out.print("Enter user ID: ");
+        String userId = scanner.nextLine();
+        System.out.print("Enter PIN: ");
+        String pin = scanner.nextLine();
+
+        boolean accessGranted = controller.authenticate(userId, pin);
+        if (!accessGranted) {
+            System.out.println("Authentication failed. Exiting.");
+            scanner.close();
+            return;
+        }
+        System.out.println("Login successful.");
+
+        // Step2: Display user balance
+        double balance = controller.getCurrentUser().getAccount().getBalance();
+        System.out.println("Welcome, " + controller.getCurrentUser().getName() + "!");
+        System.out.println("Your balance: " + balance + " EUR");
         
-        // Authenticate user
-        do {
-            System.out.print("Enter user name: ");
-            userId = scanner.nextLine();
-
-            System.out.print("Enter PIN code or password: ");
-            pin = scanner.nextLine();
-
-            loginSuccess = controller.authenticate(userId, pin);
-            if (loginSuccess) {
-                System.out.println("Login successful. Welcome, " + userId + "!");
-            } else {
-                System.out.println("Login failed. Please check your username and PIN and try again.\n");
+        // Step 3: Operation selector loop
+        while (true) {
+            System.out.println("\nSelect operation:");
+            System.out.println("1. Send Money");
+            System.out.println("2. View Transaction History");
+            System.out.println("3. Exit");
+            System.out.print("Enter your choice: ");
+            String choiceInput = scanner.nextLine();
+            int choice;
+            try {
+                choice = Integer.parseInt(choiceInput);
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter 1, 2, or 3.");
+                continue;
             }
-        } while (!loginSuccess);
 
-        // Display current balance
-        System.out.println("\n--- Send Money ---");
-        System.out.println("Your current balance: €" + walletService.getBalance(userId));
-        System.out.print("Enter recipient name: ");
-        String recipientId = scanner.nextLine();
+            if (choice == 1) {
+                // Send Money
+                System.out.print("Enter recipient ID: ");
+                String recipientId = scanner.nextLine();
+                System.out.print("Enter amount to send: ");
+                double amount;
+                try {
+                    amount = Double.parseDouble(scanner.nextLine());
+                } catch (NumberFormatException e) {
+                    System.out.println("Invalid amount entered.");
+                    continue;
+                }
+                String status = controller.sendMoney(recipientId, amount);
+                System.out.println("Transaction status: " + status);
 
-        // Check if recipient exists $need professor's approval first
-        /*String recipientId;
-        do {
-            System.out.print("Enter recipient name: ");
-            recipientId = scanner.nextLine();
+            } else if (choice == 2) {
+                // View Transaction History
+                List<Transaction> transactions = controller.viewTransactions();
+                if (transactions == null || transactions.isEmpty()) {
+                    System.out.println("No transactions found.");
+                } else {
+                    System.out.println("TxnID | Amount | Status | Date | RecipientID | Type");
+                    for (Transaction txn : controller.viewTransactions()) {
+                        System.out.println(
+                            txn.getTransactionId() + " | " +
+                            txn.getAmount() + " | " +
+                            txn.getStatus() + " | " +
+                            txn.getDate() + " | " +
+                            txn.getRecipientId() + " | " +
+                            txn.getTransactionType()
+                        );
+                    }
+                }
 
-            if (!walletService.recipientExists(recipientId)) {
-            System.out.println("Recipient not found. Please enter a valid recipient.");
+            } else if (choice == 3) {
+                // Exit
+                System.out.println("Goodbye!");
+                break;
             } else {
-            break;
+                System.out.println("Invalid choice. Please select 1, 2, or 3.");
             }
-        } while (true);*/
+        }
 
-        System.out.print("Enter amount to send: ");
-        double amount = scanner.nextDouble();
-
-        System.out.println("\nProcessing transaction...");
-        String result = controller.sendMoney(userId, recipientId, amount);
-
-        System.out.println("Transaction status: " + result);
+        scanner.close();
     }
 }
