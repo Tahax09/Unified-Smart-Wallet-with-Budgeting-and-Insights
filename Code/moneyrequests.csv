@@ -1,0 +1,4 @@
+requestId,amount,status,createdDate,requesterId,recipientId
+REQ1002,25.0,accepted,1720833600000,prof_alessia,tahax09
+REQ1001,50.0,pending,1720920000000,tahax09,prof_alessia
+REQ1752461338700,100.0,pending,1752461338701,tahax09,prof_alessia

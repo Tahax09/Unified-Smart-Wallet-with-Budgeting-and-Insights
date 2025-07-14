@@ -6,13 +6,18 @@ import java.util.*;
 public class DataManager {
     private String filePath;
     private Map<String, User> users;
+    private Map<String, MoneyRequest> moneyRequests = new HashMap<>();
+    private List<Transaction> transactions = new ArrayList<>();
 
     public DataManager(String filePath) {
         this.filePath = filePath;
         this.users = new HashMap<>();
         loadUsers();
         loadTransactions();
+        loadMoneyRequests(); // <-- Now loads requests from file
     }
+
+    // --- USER MANAGEMENT ---
 
     private void loadUsers() {
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
@@ -32,6 +37,21 @@ public class DataManager {
             e.printStackTrace();
         }
     }
+
+    public User findUser(String userId) {
+        return users.get(userId);
+    }
+
+    public Account findAccountById(String accountId) {
+        for (User user : users.values()) {
+            if (user.getAccount().getAccountId().equals(accountId)) {
+                return user.getAccount();
+            }
+        }
+        return null;
+    }
+
+    // --- TRANSACTION MANAGEMENT ---
 
     public void loadTransactions() {
         File txnFile = new File("transactions.csv");
@@ -60,6 +80,7 @@ public class DataManager {
                 } else if ("received".equals(transactionType) && recipient != null) {
                     recipient.addTransaction(txn);
                 }
+                transactions.add(txn);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -79,19 +100,6 @@ public class DataManager {
                 return new Date();
             }
         }
-    }
-
-    public User findUser(String userId) {
-        return users.get(userId);
-    }
-
-    public Account findAccountById(String accountId) {
-        for (User user : users.values()) {
-            if (user.getAccount().getAccountId().equals(accountId)) {
-                return user.getAccount();
-            }
-        }
-        return null;
     }
 
     public void saveTransaction(Transaction transaction) {
@@ -114,6 +122,17 @@ public class DataManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        transactions.add(transaction);
+    }
+
+    public List<Transaction> getTransactionsForUser(User user) {
+        List<Transaction> result = new ArrayList<>();
+        for (Transaction t : transactions) {
+            if (t.getSenderAccount().equals(user.getAccount()) || t.getRecipientAccount().equals(user.getAccount())) {
+                result.add(t);
+            }
+        }
+        return result;
     }
 
     public void updateAccounts(Account senderAccount, Account recipientAccount) {
@@ -135,5 +154,81 @@ public class DataManager {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    // --- MONEY REQUEST MANAGEMENT ---
+
+    // Load from file at startup
+    public void loadMoneyRequests() {
+        File reqFile = new File("moneyrequests.csv");
+        if (!reqFile.exists()) return;
+
+        try (BufferedReader br = new BufferedReader(new FileReader(reqFile))) {
+            String line = br.readLine(); // skip header
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(",");
+                String requestId = parts[0];
+                double amount = Double.parseDouble(parts[1]);
+                String status = parts[2];
+                Date createdDate = new Date(Long.parseLong(parts[3]));
+                String requesterId = parts[4];
+                String recipientId = parts[5];
+                User requester = findUser(requesterId);
+                User recipient = findUser(recipientId);
+                if (requester != null && recipient != null) {
+                    MoneyRequest request = new MoneyRequest(requestId, amount, status, createdDate, requester, recipient);
+                    moneyRequests.put(requestId, request);
+                    requester.addSentRequest(request);
+                    recipient.addReceivedRequest(request);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Save all requests to file (called after any change)
+    private void saveAllMoneyRequestsToFile() {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter("moneyrequests.csv"))) {
+            bw.write("requestId,amount,status,createdDate,requesterId,recipientId");
+            bw.newLine();
+            for (MoneyRequest req : moneyRequests.values()) {
+                bw.write(
+                    req.getRequestId() + "," +
+                    req.getAmount() + "," +
+                    req.getStatus() + "," +
+                    req.getCreatedDate().getTime() + "," +
+                    req.getRequester().getUserId() + "," +
+                    req.getRecipient().getUserId()
+                );
+                bw.newLine();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void saveMoneyRequest(MoneyRequest request) {
+        moneyRequests.put(request.getRequestId(), request);
+        saveAllMoneyRequestsToFile();
+    }
+
+    public MoneyRequest findMoneyRequest(String requestId) {
+        return moneyRequests.get(requestId);
+    }
+
+    public void updateMoneyRequest(MoneyRequest request) {
+        moneyRequests.put(request.getRequestId(), request);
+        saveAllMoneyRequestsToFile();
+    }
+
+    public List<MoneyRequest> getRequestsForUser(User user) {
+        List<MoneyRequest> result = new ArrayList<>();
+        for (MoneyRequest req : moneyRequests.values()) {
+            if (req.getRequester().equals(user) || req.getRecipient().equals(user)) {
+                result.add(req);
+            }
+        }
+        return result;
     }
 }
