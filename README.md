@@ -2,7 +2,7 @@
 ![Logo](https://github.com/Tahax09/Unified-Smart-Wallet-with-Budgeting-and-Insights/blob/main/eHorizon.png)
 
 
-# Unified-Smart-Wallet-with-Budgeting-and-Insights-Overview
+# Unified Smart Wallet with Budgeting and Insights Overview
 
 
 Project Overview The Unified Smart Wallet is a comprehensive financial management system that integrates budgeting tools, spending insights, and wallet functionalities into a single platform. By merging the capabilities of a Smart Wallet with Google Wallet and Apple Wallet, the project aims to address common financial challenges users face, such as fragmented budgeting tools and lack of integration between wallets and spending insights. The Unified Smart Wallet is described as an all-in-one financial management system, which includes budgeting capabilities, expenditure analysis, and wallet features in one platform. Targeting security problems that many users encounter, including unintegrated spending analytics and unconnected wallets and budgeting tools, the project seeks to combine Smart Wallet's functionality with Google Wallet and Apple Wallet. The app will allow the user to perform the following activities: • Utilize constraints and monitor outflows to avoid overspending. • Evaluation of expenses supported by machine learning with graphical representation. • Linking with Google Wallet and Apple Wallet to control and manage cards, passes, and transactions both digital and physical. • Data encryption and access and content modification in an automated manner.
